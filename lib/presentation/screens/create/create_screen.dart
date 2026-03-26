@@ -10,6 +10,7 @@ import 'package:custom_notify/core/constants/app_strings.dart';
 import 'package:custom_notify/domain/models/schedule_type.dart';
 import 'package:custom_notify/domain/services/template_service.dart';
 import 'package:custom_notify/presentation/providers/create_notification_provider.dart';
+import 'package:custom_notify/presentation/shared/lock_screen_preview.dart';
 
 /// Create or edit a notification.
 ///
@@ -110,6 +111,14 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // --- Live lock-screen preview ---
+          // Updates in real-time as the user types title and body.
+          LockScreenPreview(
+            title: state.draft.title,
+            body: state.draft.body,
+          ),
+          const SizedBox(height: AppSizes.spacingLg),
+
           // --- Error banner ---
           if (state.errorMessage != null) ...[
             Container(

@@ -92,7 +92,7 @@ Generated files (`.freezed.dart`, `.g.dart`) live alongside their source files.
 - [x] App icon & branding (CustomNotify logo across all platforms via flutter_launcher_icons)
 - [x] Unit tests: NotificationService (16 tests), ScheduleService (8 tests), HistoryService (5 tests)
 - [x] Widget test: Bottom nav tab labels
-- [ ] Lock-screen preview in Create/Edit screen
+- [x] Lock-screen preview in Create/Edit screen (iOS-style, live updates as user types)
 - [ ] Analytics dashboard
 - [ ] Custom sounds / icons in notification designer
 
@@ -203,6 +203,7 @@ by hashing (notificationUUID + fireTime). Avoid collisions.
 | Built-in templates JSON | `assets/templates/built_in_templates.json` |
 | Notification card widget | `lib/presentation/shared/notification_card.dart` |
 | Bottom nav scaffold | `lib/presentation/shared/scaffold_with_bottom_nav.dart` |
+| Lock-screen preview | `lib/presentation/shared/lock_screen_preview.dart` |
 | App icon (source, square) | `assets/icons/app_icon.png` |
 | Play Store icon (512x512) | `assets/icons/play_store_icon.png` |
 | Icon generator config | `flutter_launcher_icons.yaml` |
