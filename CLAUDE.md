@@ -97,9 +97,12 @@ Generated files (`.freezed.dart`, `.g.dart`) live alongside their source files.
 - [x] Relative time hints on upcoming one-time notifications (e.g. "in 2h")
 
 ### Launch blockers
-- [ ] PrivacyInfo.xcprivacy (required for iOS 17+ App Store submissions)
-- [ ] Privacy policy page on customnotify.us + link from Settings screen
-- [ ] Android release signing (upload keystore, build.gradle.kts signing config)
+- [x] PrivacyInfo.xcprivacy (required for iOS 17+ App Store submissions)
+- [x] Privacy policy link in Settings screen (opens customnotify.us/privacy)
+- [x] Android release signing config (key.properties + build.gradle.kts)
+- [x] iOS deployment target bumped to 13.0
+- [ ] Privacy policy page published on customnotify.us/privacy
+- [ ] Android upload keystore generated and key.properties filled in
 - [ ] End-to-end device testing (iOS + Android physical devices)
 - [ ] App Store / Play Store metadata and screenshots
 

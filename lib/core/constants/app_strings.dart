@@ -40,6 +40,9 @@ class AppStrings {
   static const String permissionsDenied =
       'Permissions denied - enable in system Settings';
 
+  // Links
+  static const String privacyPolicyUrl = 'https://customnotify.us/privacy';
+
   // Accessibility
   static const String createNotificationTooltip = 'Create notification';
   static const String premiumFeature = 'Premium feature';

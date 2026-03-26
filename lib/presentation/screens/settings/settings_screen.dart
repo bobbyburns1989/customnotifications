@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:custom_notify/core/constants/app_colors.dart';
 import 'package:custom_notify/core/constants/app_sizes.dart';
@@ -54,6 +55,16 @@ class SettingsScreen extends ConsumerWidget {
 
           // --- About section ---
           const _SectionHeader(title: 'About'),
+          const SizedBox(height: AppSizes.spacingSm),
+          _SettingsTile(
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacy Policy',
+            subtitle: 'How we handle your data',
+            onTap: () => launchUrl(
+              Uri.parse(AppStrings.privacyPolicyUrl),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
           const SizedBox(height: AppSizes.spacingSm),
           const _SettingsTile(
             icon: Icons.info_outline,
