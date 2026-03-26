@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:custom_notifications/core/constants/app_colors.dart';
-import 'package:custom_notifications/core/constants/app_sizes.dart';
+import 'package:custom_notify/core/constants/app_colors.dart';
+import 'package:custom_notify/core/constants/app_sizes.dart';
 
 /// Centralized theme definition — light mode only.
 ///
@@ -41,7 +41,7 @@ class AppTheme {
         titleTextStyle: TextStyle(
           fontFamily: 'Inter',
           fontSize: 18,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
         ),
       ),
@@ -120,6 +120,14 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSizes.spacingMd,
           vertical: AppSizes.spacingMd,
+        ),
+      ),
+
+      // Snackbars — floating, rounded to match card/button styling
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
         ),
       ),
     );

@@ -1,12 +1,13 @@
-# CustomNotifications — AI Development Guide
+# CustomNotify — AI Development Guide
 
 ## TL;DR
 
 | Key | Value |
 |-----|-------|
-| **App** | CustomNotifications — "Your Alerts, Your Way" |
+| **App** | CustomNotify — "Your Alerts, Your Way" |
 | **Version** | 1.0.0+1 |
-| **Bundle ID** | `com.customnotificationsapp.app` |
+| **Bundle ID** | `com.customnotifications.app` (iOS + Android) |
+| **Dart package** | `custom_notify` (imports: `package:custom_notify/...`) |
 | **Stack** | Flutter 3.x + Riverpod + Drift (SQLite) + Freezed + GoRouter + flutter_local_notifications |
 | **Model** | Freemium $0.99/month via RevenueCat, 3-day trial |
 | **Free Tier** | 10 active notifications, basic scheduling, 10 templates, basic history |
@@ -27,6 +28,9 @@ flutter build appbundle --release
 # Code generation (Drift + Freezed)
 dart run build_runner build --delete-conflicting-outputs
 
+# Regenerate app icons (after changing assets/icons/app_icon.png)
+dart run flutter_launcher_icons
+
 # Quality
 flutter analyze                # Must show 0 issues before commits
 flutter test                   # Run all tests
@@ -42,13 +46,54 @@ flutter clean && flutter pub get && dart run build_runner build --delete-conflic
 ```
 lib/
 ├── core/          # Constants, theme, routing, extensions, utils
-├── data/          # Database (Drift tables, DAOs), services (plugin wrappers)
-├── domain/        # Models (Freezed), business logic services
+├── data/          # Database (Drift tables, DAOs), repositories, services
+├── domain/        # Models (Freezed), enums, business logic services
 ├── presentation/  # Providers, screens, shared widgets
-└── generated/     # build_runner output
+└── main.dart
 ```
 
+Generated files (`.freezed.dart`, `.g.dart`) live alongside their source files.
+
 **Data flow:** Screen → Provider → Domain Service → Data Repository/DAO → Drift DB
+
+## Development Status
+
+### Phase 1 — Core CRUD + Scheduling (complete)
+- [x] Project scaffolding (theme, routing, bottom nav)
+- [x] Database layer (Drift tables, DAOs, mappers)
+- [x] Domain models (Freezed: NotificationItem, HistoryEntry, enums)
+- [x] NotificationService (CRUD + validation + free tier limits)
+- [x] NotificationPluginService (flutter_local_notifications OS bridge)
+- [x] ScheduleService (rolling window scheduler, iOS 60-slot budget)
+- [x] HistoryService (records notification tap events)
+- [x] Riverpod providers (database, plugin, schedule, history, notification list, create form)
+- [x] Home screen (notification list with toggle/swipe-delete/FAB)
+- [x] Create/Edit screen (full form with schedule type picker, date/time/weekday pickers)
+- [x] History screen (grouped by date, action icons/badges, empty state)
+- [x] Settings screen (permissions, pending count, history pruning, about)
+- [x] Platform permissions (Info.plist background modes, AndroidManifest permissions + receivers)
+- [x] Notification tap → history recording wired in main.dart
+
+### Phase 2 — Background & Lifecycle (complete)
+- [x] WorkManager periodic schedule re-sync (30-min interval)
+- [x] App lifecycle foreground re-sync (AppLifecycleListener in main.dart)
+- [x] Onboarding flow with permission request (3-page PageView)
+- [x] Undo delete with 5-second snackbar action
+
+### Phase 3 — Premium & Polish (partial)
+- [x] RevenueCat service (purchases_flutter wrapper, placeholder API keys)
+- [x] Custom paywall screen (branded, feature comparison, purchase/restore)
+- [x] Premium gate (NotificationService bypasses limits for premium users)
+- [x] Templates system (50 built-in templates, JSON asset, gallery screen)
+- [x] Page transition animations (slide-up overlays, fade onboarding)
+- [x] Confirmation & success feedback (snackbars for edit/toggle/purchase failure)
+- [x] Floating rounded snackbar theme
+- [x] Feedback strings centralized in AppStrings
+- [x] App icon & branding (CustomNotify logo across all platforms via flutter_launcher_icons)
+- [ ] Analytics dashboard
+- [ ] Custom sounds / icons in notification designer
+
+Scaffolded but empty: categories/, creator/
 
 ## Code Standards
 
@@ -60,6 +105,7 @@ lib/
 - `flutter analyze` must pass with 0 issues before any commit
 - All models use Freezed with code-gen (@freezed, copyWith, toJson/fromJson)
 - All database operations use Drift typed queries — no raw SQL
+- User-facing feedback strings go in `AppStrings` — never hardcode inline
 
 ### Never Do
 - **Never use `awesome_notifications`** — incompatible with flutter_local_notifications
@@ -105,25 +151,60 @@ by hashing (notificationUUID + fireTime). Avoid collisions.
 ## Design System
 
 - **Light mode only** (dark mode deferred)
-- **Gold accent**: #FFD700 (primary), #FFE44D (light), #B8860B (dark/pressed)
+- **Gold accent**: #C9A832 (primary), #D4BC5E (light), #A38A1E (dark/pressed)
 - **Font**: Inter (bundled in assets/fonts/inter/)
 - **Card radius**: 14px
 - **Button height**: 48px
-- **Bottom nav**: 4 tabs — Home, Create, History, Settings
+- **Bottom nav**: 4 tabs — Home, Templates, History, Settings
+- **Snackbars**: Floating, rounded (12px), default dark background
+- **Page transitions**: Slide-up (300ms easeOutCubic) for full-screen overlays; fade (400ms) for onboarding
 
 ## Key File Locations
 
 | Task | File |
 |------|------|
+| App entry point | `lib/main.dart` |
 | Database tables | `lib/data/database/tables/` |
 | Database definition | `lib/data/database/app_database.dart` |
-| Notification scheduling | `lib/domain/services/schedule_service.dart` |
-| Plugin wrapper | `lib/data/services/notification_plugin_service.dart` |
-| RevenueCat | `lib/data/services/revenuecat_service.dart` |
+| DAOs | `lib/data/database/daos/notification_dao.dart`, `history_dao.dart` |
+| Entity ↔ domain mappers | `lib/data/database/mappers/` |
+| Domain models (Freezed) | `lib/domain/models/notification_item.dart`, `history_entry.dart` |
+| Schedule type enum | `lib/domain/models/schedule_type.dart` |
+| History action enum | `lib/domain/models/history_action.dart` |
+| Notification business logic | `lib/domain/services/notification_service.dart` |
+| Rolling window scheduler | `lib/domain/services/schedule_service.dart` |
+| History recording service | `lib/domain/services/history_service.dart` |
+| Plugin wrapper (OS bridge) | `lib/data/services/notification_plugin_service.dart` |
+| RevenueCat service | `lib/data/services/revenuecat_service.dart` |
 | Theme | `lib/core/theme/app_theme.dart` |
 | Routes | `lib/core/routing/app_router.dart` |
 | Colors | `lib/core/constants/app_colors.dart` |
-| Providers | `lib/presentation/providers/` |
+| Sizes/spacing constants | `lib/core/constants/app_sizes.dart` |
+| String constants | `lib/core/constants/app_strings.dart` |
+| Logger utility | `lib/core/utils/logger.dart` |
+| DB + service providers | `lib/presentation/providers/database_provider.dart` |
+| Create/Edit form provider | `lib/presentation/providers/create_notification_provider.dart` |
+| Notification list provider | `lib/presentation/providers/notification_list_provider.dart` |
+| History list provider | `lib/presentation/providers/history_provider.dart` |
+| Onboarding provider | `lib/presentation/providers/onboarding_provider.dart` |
+| Premium status provider | `lib/presentation/providers/premium_provider.dart` |
+| Template list provider | `lib/presentation/providers/template_provider.dart` |
+| Home screen | `lib/presentation/screens/home/home_screen.dart` |
+| Create/Edit screen | `lib/presentation/screens/create/create_screen.dart` |
+| History screen | `lib/presentation/screens/history/history_screen.dart` |
+| Settings screen | `lib/presentation/screens/settings/settings_screen.dart` |
+| Onboarding screen | `lib/presentation/screens/onboarding/onboarding_screen.dart` |
+| Paywall screen | `lib/presentation/screens/premium/paywall_screen.dart` |
+| Templates screen | `lib/presentation/screens/templates/templates_screen.dart` |
+| Background sync service | `lib/domain/services/background_sync_service.dart` |
+| Template service | `lib/domain/services/template_service.dart` |
+| Template model (Freezed) | `lib/domain/models/template_item.dart` |
+| Built-in templates JSON | `assets/templates/built_in_templates.json` |
+| Notification card widget | `lib/presentation/shared/notification_card.dart` |
+| Bottom nav scaffold | `lib/presentation/shared/scaffold_with_bottom_nav.dart` |
+| App icon (source, square) | `assets/icons/app_icon.png` |
+| Play Store icon (512x512) | `assets/icons/play_store_icon.png` |
+| Icon generator config | `flutter_launcher_icons.yaml` |
 
 ## Haptic Patterns
 

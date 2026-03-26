@@ -1,16 +1,24 @@
-# custom_notifications
+# CustomNotify
 
-A new Flutter project.
+**Your Alerts, Your Way** — Create custom push notifications with scheduling,
+persistence, and a live lock-screen preview. No account required.
 
-## Getting Started
+## Stack
 
-This project is a starting point for a Flutter application.
+Flutter 3.x | Riverpod | Drift (SQLite) | Freezed | GoRouter | flutter_local_notifications
 
-A few resources to get you started if this is your first Flutter project:
+## Setup
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+flutter run
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## AI Development
+
+See [CLAUDE.md](CLAUDE.md) for the AI development guide used by Claude Code.
+
+## License
+
+Proprietary — CustomApps LLC

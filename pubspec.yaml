@@ -1,4 +1,4 @@
-name: custom_notifications
+name: custom_notify
 description: "Your Alerts, Your Way. Create custom notifications without an account."
 publish_to: 'none'
 version: 1.0.0+1

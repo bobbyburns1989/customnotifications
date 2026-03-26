@@ -2,15 +2,15 @@ import 'dart:ui';
 
 /// App color palette — light mode with gold accent system.
 ///
-/// Brand gold (#FFD700) is the primary accent. All UI colors reference
+/// Brand gold (#C9A832) is the primary accent. All UI colors reference
 /// these constants so the palette can be tuned in one place.
 class AppColors {
   AppColors._();
 
   // Brand gold
-  static const Color gold = Color(0xFFFFD700);
-  static const Color goldLight = Color(0xFFFFE44D);
-  static const Color goldDark = Color(0xFFB8860B);
+  static const Color gold = Color(0xFFC9A832);
+  static const Color goldLight = Color(0xFFD4BC5E);
+  static const Color goldDark = Color(0xFFA38A1E);
 
   // Surfaces
   static const Color background = Color(0xFFF8F9FA);
