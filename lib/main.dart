@@ -19,7 +19,15 @@ void main() async {
 
   // Register WorkManager periodic sync (30-min interval) so scheduled
   // notifications survive app kills and device reboots.
-  await BackgroundSyncService.initialize();
+  // Wrapped in try-catch because WorkManager's registerPeriodicTask
+  // throws on iOS simulator. Safe to skip — sync still runs on
+  // foreground resume via AppLifecycleListener.
+  try {
+    await BackgroundSyncService.initialize();
+  } catch (e) {
+    Logger.info('WorkManager init failed (expected on simulator): $e',
+        tag: 'App');
+  }
 
   // RevenueCat disabled for v1.0 launch — all features unlocked for free.
   // Re-enable when API keys are configured in the RevenueCat dashboard.
