@@ -10,6 +10,7 @@ import 'package:custom_notify/core/constants/app_strings.dart';
 import 'package:custom_notify/domain/models/schedule_type.dart';
 import 'package:custom_notify/domain/services/template_service.dart';
 import 'package:custom_notify/presentation/providers/create_notification_provider.dart';
+import 'package:custom_notify/presentation/providers/premium_provider.dart';
 import 'package:custom_notify/presentation/shared/lock_screen_preview.dart';
 
 /// Create or edit a notification.
@@ -187,6 +188,8 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
           const SizedBox(height: AppSizes.spacingSm),
           _ScheduleTypePicker(
             selected: state.draft.scheduleType,
+            isPremiumUser:
+                ref.watch(premiumStatusProvider).valueOrNull ?? false,
             onChanged: notifier.setScheduleType,
           ),
           if (state.scheduleError != null) ...[
@@ -206,8 +209,10 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
             scheduleType: state.draft.scheduleType,
             scheduledAt: state.draft.scheduledAt,
             weekdays: state.draft.weekdays ?? [],
+            intervalMinutes: state.draft.intervalMinutes ?? 60,
             onDateTimeChanged: notifier.setScheduledAt,
             onWeekdaysChanged: notifier.setWeekdays,
+            onIntervalChanged: notifier.setIntervalMinutes,
           ),
           const SizedBox(height: AppSizes.spacingXl),
 
@@ -263,11 +268,22 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
 class _ScheduleTypePicker extends StatelessWidget {
   const _ScheduleTypePicker({
     required this.selected,
+    required this.isPremiumUser,
     required this.onChanged,
   });
 
   final ScheduleType selected;
+  final bool isPremiumUser;
   final ValueChanged<ScheduleType> onChanged;
+
+  /// Schedule types that have fire time computation implemented.
+  /// Random and custom return empty fire times and are not ready for v1.
+  static const _implementedTypes = {
+    ScheduleType.oneTime,
+    ScheduleType.daily,
+    ScheduleType.weekly,
+    ScheduleType.interval,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -276,22 +292,30 @@ class _ScheduleTypePicker extends StatelessWidget {
       runSpacing: AppSizes.spacingSm,
       children: ScheduleType.values.map((type) {
         final isSelected = type == selected;
-        final isPremium = type.isPremium;
+        // A type is locked if it requires premium and the user isn't premium,
+        // OR if it's not yet implemented (random, custom).
+        final isLocked = (type.isPremium && !isPremiumUser) ||
+            !_implementedTypes.contains(type);
 
         return ChoiceChip(
           label: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(type.label),
-              if (isPremium) ...[
+              if (isLocked) ...[
                 const SizedBox(width: 4),
-                const Icon(Icons.lock, size: 14),
+                Icon(
+                  _implementedTypes.contains(type)
+                      ? Icons.lock
+                      : Icons.schedule,
+                  size: 14,
+                ),
               ],
             ],
           ),
           selected: isSelected,
-          onSelected: isPremium
-              ? null // Disabled for premium types.
+          onSelected: isLocked
+              ? null
               : (_) {
                   HapticFeedback.lightImpact();
                   onChanged(type);
@@ -313,15 +337,19 @@ class _ScheduleFields extends StatelessWidget {
     required this.scheduleType,
     required this.scheduledAt,
     required this.weekdays,
+    required this.intervalMinutes,
     required this.onDateTimeChanged,
     required this.onWeekdaysChanged,
+    required this.onIntervalChanged,
   });
 
   final ScheduleType scheduleType;
   final DateTime scheduledAt;
   final List<int> weekdays;
+  final int intervalMinutes;
   final ValueChanged<DateTime> onDateTimeChanged;
   final ValueChanged<List<int>> onWeekdaysChanged;
+  final ValueChanged<int> onIntervalChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -357,8 +385,14 @@ class _ScheduleFields extends StatelessWidget {
             ),
           ],
         );
-      // Premium types — show a placeholder message.
       case ScheduleType.interval:
+        return _IntervalFields(
+          scheduledAt: scheduledAt,
+          intervalMinutes: intervalMinutes,
+          onDateTimeChanged: onDateTimeChanged,
+          onIntervalChanged: onIntervalChanged,
+        );
+      // Not yet implemented — show a "coming soon" message.
       case ScheduleType.random:
       case ScheduleType.custom:
         return Container(
@@ -369,12 +403,12 @@ class _ScheduleFields extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.lock_outline,
+              const Icon(Icons.schedule,
                   color: AppColors.textTertiary, size: AppSizes.iconSizeMd),
               const SizedBox(width: AppSizes.spacingSm),
               Expanded(
                 child: Text(
-                  'Upgrade to Premium to unlock ${scheduleType.label} scheduling.',
+                  '${scheduleType.label} scheduling is coming soon.',
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
@@ -385,6 +419,73 @@ class _ScheduleFields extends StatelessWidget {
           ),
         );
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Interval Schedule Fields
+// ---------------------------------------------------------------------------
+
+/// Fields for interval scheduling: start date/time + repeat every N minutes.
+class _IntervalFields extends StatelessWidget {
+  const _IntervalFields({
+    required this.scheduledAt,
+    required this.intervalMinutes,
+    required this.onDateTimeChanged,
+    required this.onIntervalChanged,
+  });
+
+  final DateTime scheduledAt;
+  final int intervalMinutes;
+  final ValueChanged<DateTime> onDateTimeChanged;
+  final ValueChanged<int> onIntervalChanged;
+
+  /// Preset interval options (minutes) for quick selection.
+  static const _presets = [15, 30, 60, 120, 240, 480];
+  static const _presetLabels = [
+    '15 min',
+    '30 min',
+    '1 hour',
+    '2 hours',
+    '4 hours',
+    '8 hours',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Start date/time picker.
+        _DateTimePicker(
+          dateTime: scheduledAt,
+          showDate: true,
+          showTime: true,
+          onChanged: onDateTimeChanged,
+        ),
+        const SizedBox(height: AppSizes.spacingMd),
+
+        // Interval picker.
+        Text('Repeat every', style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: AppSizes.spacingSm),
+        Wrap(
+          spacing: AppSizes.spacingSm,
+          runSpacing: AppSizes.spacingSm,
+          children: List.generate(_presets.length, (i) {
+            final isSelected = intervalMinutes == _presets[i];
+            return ChoiceChip(
+              label: Text(_presetLabels[i]),
+              selected: isSelected,
+              selectedColor: AppColors.goldLight,
+              onSelected: (_) {
+                HapticFeedback.lightImpact();
+                onIntervalChanged(_presets[i]);
+              },
+            );
+          }),
+        ),
+      ],
+    );
   }
 }
 

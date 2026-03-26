@@ -6,7 +6,6 @@ import 'package:custom_notify/core/theme/app_theme.dart';
 import 'package:custom_notify/core/utils/logger.dart';
 import 'package:custom_notify/data/services/notification_plugin_service.dart';
 import 'package:custom_notify/domain/models/history_action.dart';
-import 'package:custom_notify/data/services/revenuecat_service.dart';
 import 'package:custom_notify/domain/services/background_sync_service.dart';
 import 'package:custom_notify/presentation/providers/database_provider.dart';
 
@@ -22,9 +21,9 @@ void main() async {
   // notifications survive app kills and device reboots.
   await BackgroundSyncService.initialize();
 
-  // Initialize RevenueCat for premium subscription management.
-  // Uses platform-specific API keys (TODO placeholders until configured).
-  await RevenueCatService.instance.initialize();
+  // RevenueCat disabled for v1.0 launch — all features unlocked for free.
+  // Re-enable when API keys are configured in the RevenueCat dashboard.
+  // await RevenueCatService.instance.initialize();
 
   // Create the ProviderContainer so we can access services from the
   // notification tap callback (which fires outside the widget tree).
