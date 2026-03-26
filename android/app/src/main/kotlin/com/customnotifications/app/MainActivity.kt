@@ -1,4 +1,4 @@
-package com.customnotificationsapp.custom_notifications
+package com.customnotifications.app
 
 import io.flutter.embedding.android.FlutterActivity
 

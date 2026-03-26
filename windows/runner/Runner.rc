@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.customnotificationsapp" "\0"
-            VALUE "FileDescription", "custom_notifications" "\0"
+            VALUE "CompanyName", "CustomApps LLC" "\0"
+            VALUE "FileDescription", "CustomNotify" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "custom_notifications" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.customnotificationsapp. All rights reserved." "\0"
-            VALUE "OriginalFilename", "custom_notifications.exe" "\0"
-            VALUE "ProductName", "custom_notifications" "\0"
+            VALUE "InternalName", "custom_notify" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 CustomApps LLC. All rights reserved." "\0"
+            VALUE "OriginalFilename", "custom_notify.exe" "\0"
+            VALUE "ProductName", "CustomNotify" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
