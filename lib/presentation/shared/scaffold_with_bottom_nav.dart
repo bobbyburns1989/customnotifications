@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:custom_notifications/core/constants/app_strings.dart';
+import 'package:custom_notify/core/constants/app_strings.dart';
 
 /// Persistent shell that wraps all tab screens with the bottom nav bar.
 ///
@@ -37,9 +37,9 @@ class ScaffoldWithBottomNav extends StatelessWidget {
             label: AppStrings.tabHome,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            activeIcon: Icon(Icons.add_circle),
-            label: AppStrings.tabCreate,
+            icon: Icon(Icons.auto_awesome_outlined),
+            activeIcon: Icon(Icons.auto_awesome),
+            label: AppStrings.tabTemplates,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.history_outlined),
