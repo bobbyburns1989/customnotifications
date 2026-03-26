@@ -80,21 +80,31 @@ Generated files (`.freezed.dart`, `.g.dart`) live alongside their source files.
 - [x] Onboarding flow with permission request (3-page PageView)
 - [x] Undo delete with 5-second snackbar action
 
-### Phase 3 — Premium & Polish (partial)
+### Phase 3 — Premium & Polish (v1 complete)
 - [x] RevenueCat service (purchases_flutter wrapper, placeholder API keys)
 - [x] Custom paywall screen (branded, feature comparison, purchase/restore)
 - [x] Premium gate (NotificationService bypasses limits for premium users)
+- [x] Premium schedule type validation at service layer (defense-in-depth)
 - [x] Templates system (50 built-in templates, JSON asset, gallery screen)
 - [x] Page transition animations (slide-up overlays, fade onboarding)
 - [x] Confirmation & success feedback (snackbars for edit/toggle/purchase failure)
 - [x] Floating rounded snackbar theme
 - [x] Feedback strings centralized in AppStrings
 - [x] App icon & branding (CustomNotify logo across all platforms via flutter_launcher_icons)
-- [x] Unit tests: NotificationService (16 tests), ScheduleService (8 tests), HistoryService (5 tests)
+- [x] Unit tests: NotificationService (18 tests), ScheduleService (8 tests), HistoryService (5 tests)
 - [x] Widget test: Bottom nav tab labels
 - [x] Lock-screen preview in Create/Edit screen (iOS-style, live updates as user types)
+
+### Post-launch (deferred)
+- [ ] Random schedule type (fire time computation)
+- [ ] Custom/cron schedule type (fire time computation)
 - [ ] Analytics dashboard
 - [ ] Custom sounds / icons in notification designer
+
+### Launch blockers
+- [ ] Replace RevenueCat placeholder API keys (`lib/data/services/revenuecat_service.dart`)
+- [ ] End-to-end device testing (iOS + Android physical devices)
+- [ ] App Store / Play Store metadata and screenshots
 
 ## Code Standards
 

@@ -111,6 +111,29 @@ void main() {
       );
     });
 
+    test('throws validation error for premium schedule type on free tier', () async {
+      final item = _makeItem(
+        scheduleType: ScheduleType.interval,
+        intervalMinutes: 60,
+      );
+      expect(
+        () => service.createNotification(item),
+        throwsA(isA<NotificationValidationException>()),
+      );
+    });
+
+    test('allows premium schedule type for premium user', () async {
+      final item = _makeItem(
+        id: 'premium-interval',
+        scheduleType: ScheduleType.interval,
+        intervalMinutes: 60,
+      );
+      await premiumService.createNotification(item);
+      final fetched = await premiumService.getById('premium-interval');
+      expect(fetched, isNotNull);
+      expect(fetched!.scheduleType, equals(ScheduleType.interval));
+    });
+
     test('throws validation error for interval with 0 minutes', () async {
       final item = _makeItem(
         scheduleType: ScheduleType.interval,

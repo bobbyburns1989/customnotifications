@@ -123,6 +123,14 @@ class NotificationService {
         'Body must be 1000 characters or less.',
       );
     }
+    // Defense-in-depth: reject premium schedule types for free users.
+    // The UI already prevents selection, but this guards against any
+    // code path that bypasses the picker (e.g. template pre-fill).
+    if (!isPremium && item.scheduleType.isPremium) {
+      throw NotificationValidationException(
+        '${item.scheduleType.label} scheduling requires Premium.',
+      );
+    }
     // For weekly schedules, weekdays must not be empty.
     if (item.scheduleType.name == 'weekly' &&
         (item.weekdays == null || item.weekdays!.isEmpty)) {
