@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import 'package:custom_notify/core/constants/app_colors.dart';
 import 'package:custom_notify/core/constants/app_sizes.dart';
+import 'package:custom_notify/core/constants/app_strings.dart';
 import 'package:custom_notify/domain/models/history_action.dart';
 import 'package:custom_notify/domain/models/history_entry.dart';
 import 'package:custom_notify/presentation/providers/history_provider.dart';
@@ -23,7 +24,7 @@ class HistoryScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(
           child: Text(
-            'Something went wrong.\n$err',
+            AppStrings.genericError,
             textAlign: TextAlign.center,
             style: Theme.of(context)
                 .textTheme
@@ -165,7 +166,7 @@ class _HistoryTile extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                         ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -254,14 +255,14 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.spacingMd),
             Text(
-              'No history yet',
+              AppStrings.emptyHistory,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.textSecondary,
                   ),
             ),
             const SizedBox(height: AppSizes.spacingSm),
             Text(
-              'Delivered and tapped notifications will appear here.',
+              AppStrings.emptyHistoryHint,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textTertiary,

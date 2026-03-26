@@ -27,7 +27,7 @@ class HomeScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(
           child: Text(
-            'Something went wrong.\n$err',
+            AppStrings.genericError,
             textAlign: TextAlign.center,
             style: Theme.of(context)
                 .textTheme
@@ -71,6 +71,7 @@ class HomeScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.gold,
         foregroundColor: AppColors.textPrimary,
+        tooltip: AppStrings.createNotificationTooltip,
         onPressed: () => _navigateToCreate(context),
         child: const Icon(Icons.add),
       ),
@@ -101,7 +102,7 @@ class HomeScreen extends ConsumerWidget {
             content: Text(
               isActive ? AppStrings.notificationActive : AppStrings.notificationPaused,
             ),
-            duration: const Duration(seconds: 1),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -181,14 +182,14 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.spacingMd),
             Text(
-              'No notifications yet',
+              AppStrings.emptyNotifications,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.textSecondary,
                   ),
             ),
             const SizedBox(height: AppSizes.spacingSm),
             Text(
-              'Tap the button below to create your first notification.',
+              AppStrings.emptyNotificationsHint,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textTertiary,

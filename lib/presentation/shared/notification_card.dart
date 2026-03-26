@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import 'package:custom_notify/core/constants/app_colors.dart';
 import 'package:custom_notify/core/constants/app_sizes.dart';
+import 'package:custom_notify/core/constants/app_strings.dart';
 import 'package:custom_notify/domain/models/notification_item.dart';
 
 /// Displays a single notification as a card with toggle, tap-to-edit,
@@ -155,8 +156,16 @@ class NotificationCard extends StatelessWidget {
     final diff = local.difference(now);
 
     // For one-time notifications, show the full date + time.
+    // Append a relative hint when firing within 24 hours.
     if (item.scheduleType.name == 'oneTime') {
-      return DateFormat.yMMMd().add_jm().format(local);
+      final formatted = DateFormat.yMMMd().add_jm().format(local);
+      if (!diff.isNegative && diff.inHours < 24) {
+        if (diff.inMinutes < 60) {
+          return '$formatted (in ${diff.inMinutes} min)';
+        }
+        return '$formatted (in ${diff.inHours}h)';
+      }
+      return formatted;
     }
 
     // For recurring, show the time of day.
@@ -171,7 +180,7 @@ class NotificationCard extends StatelessWidget {
 
     // Fallback: relative or absolute time.
     if (diff.isNegative) {
-      return 'Past due';
+      return AppStrings.overdue;
     }
     return DateFormat.yMMMd().add_jm().format(local);
   }
@@ -191,9 +200,10 @@ class _ScheduleBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.spacingSm, vertical: AppSizes.spacingXxs),
       decoration: BoxDecoration(
-        color: AppColors.goldLight.withValues(alpha: 0.5),
+        color: AppColors.goldLight.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(AppSizes.radiusSm),
       ),
       child: Text(

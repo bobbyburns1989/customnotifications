@@ -12,6 +12,7 @@ class AppSizes {
   static const double radiusXl = 20.0;
 
   // Spacing
+  static const double spacingXxs = 2.0;
   static const double spacingXs = 4.0;
   static const double spacingSm = 8.0;
   static const double spacingMd = 16.0;
@@ -20,6 +21,7 @@ class AppSizes {
 
   // Component sizes
   static const double buttonHeight = 48.0;
+  static const double iconSizeXs = 16.0;
   static const double iconSizeSm = 20.0;
   static const double iconSizeMd = 24.0;
   static const double iconSizeLg = 32.0;

@@ -155,7 +155,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
             maxLength: 200,
             decoration: InputDecoration(
               labelText: 'Title',
-              hintText: 'e.g. Take medication',
+              hintText: AppStrings.titleHint,
               errorText: state.titleError,
               counterText: '', // Hide the character counter.
             ),
@@ -172,7 +172,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
             maxLines: 3,
             decoration: InputDecoration(
               labelText: 'Message',
-              hintText: 'e.g. Time to take your daily vitamins!',
+              hintText: AppStrings.bodyHint,
               errorText: state.bodyError,
               counterText: '',
             ),
@@ -303,12 +303,12 @@ class _ScheduleTypePicker extends StatelessWidget {
             children: [
               Text(type.label),
               if (isLocked) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSizes.spacingXs),
                 Icon(
                   _implementedTypes.contains(type)
                       ? Icons.lock
                       : Icons.schedule,
-                  size: 14,
+                  size: AppSizes.iconSizeXs,
                 ),
               ],
             ],
@@ -322,6 +322,9 @@ class _ScheduleTypePicker extends StatelessWidget {
                 },
           selectedColor: AppColors.goldLight,
           disabledColor: AppColors.surfaceVariant,
+          labelStyle: isLocked
+              ? const TextStyle(color: AppColors.textTertiary)
+              : null,
         );
       }).toList(),
     );

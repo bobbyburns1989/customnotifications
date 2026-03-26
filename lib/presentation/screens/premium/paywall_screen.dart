@@ -239,7 +239,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 /// A single row in the feature comparison list.
 ///
 /// Shows the feature title with Free and Premium values.
-/// A null [freeValue] renders a dash (—) to indicate the feature
+/// A null [freeValue] renders a dash (-) to indicate the feature
 /// is not available on the free tier.
 class _FeatureRow extends StatelessWidget {
   const _FeatureRow({
@@ -268,7 +268,7 @@ class _FeatureRow extends StatelessWidget {
         Expanded(
           flex: 2,
           child: Text(
-            freeValue ?? '—',
+            freeValue ?? '-',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: freeValue != null

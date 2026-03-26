@@ -5,63 +5,107 @@ import 'package:go_router/go_router.dart';
 
 import 'package:custom_notify/core/constants/app_colors.dart';
 import 'package:custom_notify/core/constants/app_sizes.dart';
+import 'package:custom_notify/core/constants/app_strings.dart';
 import 'package:custom_notify/core/routing/app_router.dart';
 import 'package:custom_notify/domain/models/template_item.dart';
 import 'package:custom_notify/presentation/providers/premium_provider.dart';
 import 'package:custom_notify/presentation/providers/template_provider.dart';
 
-/// Template gallery screen — grouped by category.
+/// Template gallery screen with horizontal category filter chips.
 ///
 /// Tapping a free template navigates to the Create screen with fields
 /// pre-filled. Tapping a premium template opens the paywall.
+/// Free templates are sorted to the top so users see actionable content first.
 class TemplatesScreen extends ConsumerWidget {
   const TemplatesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final templatesAsync = ref.watch(templateListProvider);
+    final filteredAsync = ref.watch(filteredTemplatesProvider);
     final categoriesAsync = ref.watch(templateCategoriesProvider);
+    final selectedCategory = ref.watch(selectedTemplateCategoryProvider);
     final isPremium = ref.watch(premiumStatusProvider).valueOrNull ?? false;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Templates'),
       ),
-      body: templatesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(
-          child: Text(
-            'Failed to load templates',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-          ),
-        ),
-        data: (templates) {
-          final categories = categoriesAsync.valueOrNull ?? [];
-          if (templates.isEmpty) {
-            return const Center(child: Text('No templates available'));
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(AppSizes.spacingMd),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              final categoryTemplates = templates
-                  .where((t) => t.category == category)
-                  .toList();
-
-              return _CategorySection(
-                category: category,
-                templates: categoryTemplates,
-                isPremium: isPremium,
-                onTemplateTap: (template) =>
-                    _onTemplateTap(context, ref, template, isPremium),
+      body: Column(
+        children: [
+          // ── Category filter chips ──
+          categoriesAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (categories) {
+              // Compute per-category counts from the full (unfiltered) list.
+              final allTemplates =
+                  ref.watch(templateListProvider).valueOrNull ?? [];
+              final counts = <String, int>{};
+              for (final t in allTemplates) {
+                counts[t.category] = (counts[t.category] ?? 0) + 1;
+              }
+              return _CategoryChipBar(
+                categories: categories,
+                categoryCounts: counts,
+                totalCount: allTemplates.length,
+                selected: selectedCategory,
+                onSelected: (category) {
+                  HapticFeedback.lightImpact();
+                  ref.read(selectedTemplateCategoryProvider.notifier).state =
+                      category;
+                },
               );
             },
-          );
-        },
+          ),
+
+          // ── Template list ──
+          Expanded(
+            child: filteredAsync.when(
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(
+                child: Text(
+                  AppStrings.failedToLoadTemplates,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+              ),
+              data: (templates) {
+                if (templates.isEmpty) {
+                  return const Center(child: Text(AppStrings.emptyTemplates));
+                }
+
+                // When a specific category is selected, show a flat list
+                // (no section headers — the chip already communicates context).
+                if (selectedCategory != null) {
+                  return _TemplateList(
+                    templates: templates,
+                    isPremium: isPremium,
+                    onTap: (t) => _onTemplateTap(context, ref, t, isPremium),
+                  );
+                }
+
+                // When "All" is selected, group by category with headers.
+                // Show 3 templates per category with "See all" to keep
+                // the overview scannable.
+                final categories =
+                    categoriesAsync.valueOrNull ?? [];
+                return _GroupedTemplateList(
+                  categories: categories,
+                  templates: templates,
+                  isPremium: isPremium,
+                  onTap: (t) => _onTemplateTap(context, ref, t, isPremium),
+                  onSeeAll: (category) {
+                    HapticFeedback.lightImpact();
+                    ref.read(selectedTemplateCategoryProvider.notifier).state =
+                        category;
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -80,46 +124,309 @@ class TemplatesScreen extends ConsumerWidget {
       return;
     }
 
-    // Navigate to the Create screen with template data as query params.
-    // The Create screen reads these to pre-fill the form.
+    // Navigate to the Create screen with template data.
     context.push(
       '${AppRoutes.create}/template/${template.id}',
     );
   }
 }
 
-/// A section header + grid of template cards for one category.
+// ─────────────────────────────────────────────────────────────────────────────
+// Category chip bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Horizontal scrollable row of filter chips — "All" + one per category.
+/// Each chip shows a count badge so users can gauge category size at a glance.
+class _CategoryChipBar extends StatelessWidget {
+  const _CategoryChipBar({
+    required this.categories,
+    required this.categoryCounts,
+    required this.totalCount,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<String> categories;
+  final Map<String, int> categoryCounts;
+  final int totalCount;
+  final String? selected;
+  final ValueChanged<String?> onSelected;
+
+  /// Maps each category name to a representative icon for visual scanning.
+  static const _categoryIcons = <String, IconData>{
+    'Health': Icons.favorite_border,
+    'Work': Icons.work_outline,
+    'Personal': Icons.person_outline,
+    'Fitness': Icons.fitness_center,
+    'Custom': Icons.tune,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.spacingMd,
+        vertical: AppSizes.spacingSm,
+      ),
+      child: Row(
+        children: [
+          // "All" chip
+          _Chip(
+            label: 'All',
+            icon: Icons.grid_view_rounded,
+            count: totalCount,
+            isSelected: selected == null,
+            onTap: () => onSelected(null),
+          ),
+          const SizedBox(width: AppSizes.spacingSm),
+          // One chip per category
+          ...categories.map((cat) => Padding(
+                padding: const EdgeInsets.only(right: AppSizes.spacingSm),
+                child: _Chip(
+                  label: cat,
+                  icon: _categoryIcons[cat] ?? Icons.label_outline,
+                  count: categoryCounts[cat] ?? 0,
+                  isSelected: selected == cat,
+                  onTap: () => onSelected(cat),
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single filter chip with icon, count badge, and gold fill when selected.
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+    this.count,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final int? count;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.gold.withValues(alpha: 0.15)
+              : AppColors.surface,
+          border: Border.all(
+            color: isSelected ? AppColors.gold : AppColors.border,
+            width: 1.0,
+          ),
+          borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: AppSizes.iconSizeXs,
+              color: isSelected ? AppColors.goldDark : AppColors.textSecondary,
+            ),
+            const SizedBox(width: AppSizes.spacingSm),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: isSelected
+                        ? AppColors.goldDark
+                        : AppColors.textSecondary,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+            ),
+            // Count badge
+            if (count != null) ...[
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.goldDark.withValues(alpha: 0.15)
+                      : AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$count',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 10,
+                        color: isSelected
+                            ? AppColors.goldDark
+                            : AppColors.textTertiary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Template lists
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Flat template list (used when a single category is selected).
+class _TemplateList extends StatelessWidget {
+  const _TemplateList({
+    required this.templates,
+    required this.isPremium,
+    required this.onTap,
+  });
+
+  final List<TemplateItem> templates;
+  final bool isPremium;
+  final void Function(TemplateItem) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.spacingMd,
+        vertical: AppSizes.spacingSm,
+      ),
+      itemCount: templates.length,
+      itemBuilder: (context, index) => Padding(
+        padding: const EdgeInsets.only(bottom: AppSizes.spacingSm),
+        child: _TemplateCard(
+          template: templates[index],
+          isLocked: templates[index].isPremium && !isPremium,
+          onTap: () => onTap(templates[index]),
+        ),
+      ),
+    );
+  }
+}
+
+/// Grouped template list with category section headers (used for "All").
+/// Shows up to [_maxPreview] templates per category, with a "See all" button
+/// that switches the filter chip to that category.
+/// Free templates are shown first within each category.
+class _GroupedTemplateList extends StatelessWidget {
+  const _GroupedTemplateList({
+    required this.categories,
+    required this.templates,
+    required this.isPremium,
+    required this.onTap,
+    required this.onSeeAll,
+  });
+
+  /// Max templates shown per category in the "All" overview.
+  static const _maxPreview = 3;
+
+  final List<String> categories;
+  final List<TemplateItem> templates;
+  final bool isPremium;
+  final void Function(TemplateItem) onTap;
+  final void Function(String category) onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppSizes.spacingMd),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        // Get templates for this category, with free first.
+        final catTemplates =
+            templates.where((t) => t.category == category).toList();
+        final free = catTemplates.where((t) => !t.isPremium).toList();
+        final premium = catTemplates.where((t) => t.isPremium).toList();
+        final sorted = [...free, ...premium];
+
+        // Only show a preview in the "All" view.
+        final preview = sorted.take(_maxPreview).toList();
+        final hasMore = sorted.length > _maxPreview;
+
+        return _CategorySection(
+          category: category,
+          templates: preview,
+          totalCount: sorted.length,
+          hasMore: hasMore,
+          isPremium: isPremium,
+          onTemplateTap: onTap,
+          onSeeAll: () => onSeeAll(category),
+        );
+      },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Category section (for "All" view)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// A section header + list of template cards for one category.
+/// Shows a "See all" row when there are more templates than displayed.
 class _CategorySection extends StatelessWidget {
   const _CategorySection({
     required this.category,
     required this.templates,
+    required this.totalCount,
+    required this.hasMore,
     required this.isPremium,
     required this.onTemplateTap,
+    required this.onSeeAll,
   });
 
   final String category;
   final List<TemplateItem> templates;
+  final int totalCount;
+  final bool hasMore;
   final bool isPremium;
   final void Function(TemplateItem) onTemplateTap;
+  final VoidCallback onSeeAll;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Category header with count
         Padding(
           padding: const EdgeInsets.only(
             bottom: AppSizes.spacingSm,
             top: AppSizes.spacingSm,
           ),
-          child: Text(
-            category,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
+          child: Row(
+            children: [
+              Text(
+                category,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+              ),
+              const SizedBox(width: AppSizes.spacingSm),
+              Text(
+                '($totalCount)',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.textTertiary,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ],
           ),
         ),
+
+        // Template cards (preview subset)
         ...templates.map((template) => Padding(
               padding: const EdgeInsets.only(bottom: AppSizes.spacingSm),
               child: _TemplateCard(
@@ -128,11 +435,34 @@ class _CategorySection extends StatelessWidget {
                 onTap: () => onTemplateTap(template),
               ),
             )),
+
+        // "See all" button — switches the chip filter to this category.
+        if (hasMore)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSizes.spacingSm),
+            child: Center(
+              child: TextButton(
+                onPressed: onSeeAll,
+                child: Text(
+                  'See all $totalCount',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: AppColors.goldDark,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ),
+          ),
+
         const SizedBox(height: AppSizes.spacingSm),
       ],
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Template card
+// ─────────────────────────────────────────────────────────────────────────────
 
 /// A single template card showing icon, title, schedule badge, and lock.
 class _TemplateCard extends StatelessWidget {
@@ -191,7 +521,7 @@ class _TemplateCard extends StatelessWidget {
                                 : AppColors.textPrimary,
                           ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSizes.spacingXxs),
                     Text(
                       template.body,
                       maxLines: 1,
@@ -206,11 +536,13 @@ class _TemplateCard extends StatelessWidget {
 
               // Schedule type badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.spacingSm,
+                    vertical: AppSizes.spacingXxs),
                 decoration: BoxDecoration(
                   color: isLocked
                       ? AppColors.surfaceVariant
-                      : AppColors.goldLight.withValues(alpha: 0.5),
+                      : AppColors.goldLight.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                 ),
                 child: Text(
@@ -227,10 +559,13 @@ class _TemplateCard extends StatelessWidget {
               // Lock icon for premium templates
               if (isLocked) ...[
                 const SizedBox(width: AppSizes.spacingXs),
-                const Icon(
-                  Icons.lock_outline,
-                  size: 16,
-                  color: AppColors.textTertiary,
+                const Tooltip(
+                  message: AppStrings.premiumFeature,
+                  child: Icon(
+                    Icons.lock_outline,
+                    size: AppSizes.iconSizeXs,
+                    color: AppColors.textTertiary,
+                  ),
                 ),
               ],
             ],

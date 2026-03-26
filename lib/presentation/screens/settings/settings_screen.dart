@@ -75,8 +75,8 @@ class SettingsScreen extends ConsumerWidget {
         SnackBar(
           content: Text(
             granted
-                ? 'Notification permissions granted'
-                : 'Permissions denied — enable in system Settings',
+                ? AppStrings.permissionsGranted
+                : AppStrings.permissionsDenied,
           ),
           duration: const Duration(seconds: 3),
         ),
@@ -192,7 +192,10 @@ class _SettingsTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: AppSizes.iconSizeMd, color: AppColors.goldDark),
+              Icon(icon,
+                  size: AppSizes.iconSizeMd,
+                  color:
+                      onTap != null ? AppColors.goldDark : AppColors.textSecondary),
               const SizedBox(width: AppSizes.spacingSm),
               Expanded(
                 child: Column(

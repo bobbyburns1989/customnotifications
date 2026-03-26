@@ -87,7 +87,7 @@ class LockScreenPreview extends StatelessWidget {
                   children: [
                     // App header row: icon + app name + timestamp.
                     _NotificationHeader(isEmpty: isEmpty),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSizes.spacingSm),
 
                     // Title.
                     AnimatedDefaultTextStyle(
@@ -106,7 +106,7 @@ class LockScreenPreview extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSizes.spacingXxs),
 
                     // Body.
                     AnimatedDefaultTextStyle(
@@ -161,7 +161,7 @@ class _NotificationHeader extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppSizes.spacingSm),
 
         // App name.
         Text(
