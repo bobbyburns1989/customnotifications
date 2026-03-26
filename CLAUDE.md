@@ -90,10 +90,11 @@ Generated files (`.freezed.dart`, `.g.dart`) live alongside their source files.
 - [x] Floating rounded snackbar theme
 - [x] Feedback strings centralized in AppStrings
 - [x] App icon & branding (CustomNotify logo across all platforms via flutter_launcher_icons)
+- [x] Unit tests: NotificationService (16 tests), ScheduleService (8 tests), HistoryService (5 tests)
+- [x] Widget test: Bottom nav tab labels
+- [ ] Lock-screen preview in Create/Edit screen
 - [ ] Analytics dashboard
 - [ ] Custom sounds / icons in notification designer
-
-Scaffolded but empty: categories/, creator/
 
 ## Code Standards
 
@@ -205,6 +206,11 @@ by hashing (notificationUUID + fireTime). Avoid collisions.
 | App icon (source, square) | `assets/icons/app_icon.png` |
 | Play Store icon (512x512) | `assets/icons/play_store_icon.png` |
 | Icon generator config | `flutter_launcher_icons.yaml` |
+| Test helpers (DB + mocks) | `test/helpers/test_database.dart`, `test/helpers/mocks.dart` |
+| NotificationService tests | `test/domain/services/notification_service_test.dart` |
+| ScheduleService tests | `test/domain/services/schedule_service_test.dart` |
+| HistoryService tests | `test/domain/services/history_service_test.dart` |
+| Widget smoke test | `test/widget_test.dart` |
 
 ## Haptic Patterns
 
